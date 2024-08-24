@@ -14,6 +14,8 @@ async function MoviePage({
     id: string;
   };
 }) {
+
+
   const movies = db.collection("movies");
 
   const search = await movies.find({ $and: [{ _id: id }] },{
@@ -21,6 +23,7 @@ async function MoviePage({
       $vector: 1,
     },
   });
+
 
   if (!(await search.hasNext())) {
     return notFound();
