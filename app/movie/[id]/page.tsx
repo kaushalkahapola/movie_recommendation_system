@@ -16,7 +16,11 @@ async function MoviePage({
 }) {
   const movies = db.collection("movies");
 
-  const search = await movies.find({ $and: [{ _id: id }] });
+  const search = await movies.find({ $and: [{ _id: id }] },{
+    projection: {
+      $vector: 1,
+    },
+  });
 
   if (!(await search.hasNext())) {
     return notFound();
@@ -28,7 +32,7 @@ async function MoviePage({
     .find(
       {},
       {
-        vector: movie.$vector,
+        sort : { $vector: movie.$vector as number[] },
         limit: 6, // we will cut the first movie and want to show 5 similar movies
         includeSimilarity: true,
       }
@@ -85,14 +89,18 @@ async function MoviePage({
           Similar Films you may like
         </h2>
         <div className="flex justify-between items-center lg:flex-row gap-x-20 gap-y-10 pl-20 pr-10 py-10 overflow-x-scroll">
-          {similarMovies.map((movie, i) => (
-            <MoviePoster
-              key={movie._id}
-              index={i + 1}
-              similarityRating={Number(movie.$similarity.toFixed(2)) * 100}
-              movie={movie}
-            />
-          ))}
+          {similarMovies.map((movie, i) => {
+            // Ensure $similarity is a number
+            const similarity = movie.$similarity || 0;
+            return (
+              <MoviePoster
+                key={movie._id}
+                index={i + 1}
+                similarityRating={Math.round(similarity * 100)} // Use Math.round for better precision
+                movie={movie}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
